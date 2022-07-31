@@ -44,7 +44,9 @@ async function addOrder(req, res) {
 
     try {
         const order = req.body
+        console.log('order----', order)
         const addedOrder = await orderService.add(order)
+        console.log('addedOrder', addedOrder)
         res.send(addedOrder)
     } catch (err) {
         logger.error('Failed to add order', err)

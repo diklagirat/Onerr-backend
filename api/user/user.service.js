@@ -1,7 +1,6 @@
 
 const dbService = require('../../services/db.service')
 const logger = require('../../services/logger.service')
-const reviewService = require('../review/review.service')
 const ObjectId = require('mongodb').ObjectId
 
 module.exports = {
@@ -13,18 +12,10 @@ module.exports = {
     add
 }
 
-async function query(filterBy = {}) {
-    const criteria = _buildCriteria(filterBy)
+async function query() {
     try {
         const collection = await dbService.getCollection('user')
-        var users = await collection.find(criteria).toArray()
-        users = users.map(user => {
-            delete user.password
-            user.createdAt = ObjectId(user._id).getTimestamp()
-            // Returning fake fresh data
-            // user.createdAt = Date.now() - (1000 * 60 * 60 * 24 * 3) // 3 days ago
-            return user
-        })
+        var users = await collection.find({}).toArray()
         return users
     } catch (err) {
         logger.error('cannot find users', err)
@@ -37,13 +28,6 @@ async function getById(userId) {
         const collection = await dbService.getCollection('user')
         const user = await collection.findOne({ _id: ObjectId(userId) })
         delete user.password
-
-        user.givenReviews = await reviewService.query({ byUserId: ObjectId(user._id) })
-        user.givenReviews = user.givenReviews.map(review => {
-            delete review.byUser
-            return review
-        })
-
         return user
     } catch (err) {
         logger.error(`while finding user by id: ${userId}`, err)
@@ -53,7 +37,7 @@ async function getById(userId) {
 async function getByUsername(username) {
     try {
         const collection = await dbService.getCollection('user')
-        const user = await collection.findOne({ username })
+        const user = await collection.findOne({ username: username })
         return user
     } catch (err) {
         logger.error(`while finding user by username: ${username}`, err)
@@ -77,7 +61,8 @@ async function update(user) {
         const userToSave = {
             _id: ObjectId(user._id), // needed for the returnd obj
             fullname: user.fullname,
-            score: user.score,
+            email: user.email,
+            password: user.password
         }
         const collection = await dbService.getCollection('user')
         await collection.updateOne({ _id: userToSave._id }, { $set: userToSave })
@@ -96,7 +81,6 @@ async function add(user) {
             password: user.password,
             fullname: user.fullname,
             imgUrl: user.imgUrl,
-            score: 100
         }
         const collection = await dbService.getCollection('user')
         await collection.insertOne(userToAdd)
@@ -105,25 +89,6 @@ async function add(user) {
         logger.error('cannot insert user', err)
         throw err
     }
-}
-
-function _buildCriteria(filterBy) {
-    const criteria = {}
-    if (filterBy.txt) {
-        const txtCriteria = { $regex: filterBy.txt, $options: 'i' }
-        criteria.$or = [
-            {
-                username: txtCriteria
-            },
-            {
-                fullname: txtCriteria
-            }
-        ]
-    }
-    if (filterBy.minBalance) {
-        criteria.score = { $gte: filterBy.minBalance }
-    }
-    return criteria
 }
 
 

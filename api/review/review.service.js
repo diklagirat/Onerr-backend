@@ -8,7 +8,6 @@ async function query() {
   try {
     const collection = await dbService.getCollection('gig')
     const gigs = await collection.find({}).toArray()
-    console.log(gigs)
     return gigs
   } catch (err) {
     logger.error('cannot find reviews', err)
@@ -17,7 +16,6 @@ async function query() {
 }
 
 async function getById(gigId) {
-  console.log('gig getById service')
 
   const collection = await dbService.getCollection('gig')
   const gig = collection.findOne({ _id: ObjectId(gigId) })
