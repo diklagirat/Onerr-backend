@@ -3,29 +3,27 @@ const logger = require('../../services/logger.service')
 
 async function login(req, res) {
     const { username, password } = req.body
+    console.log('username, password ', username, password)
     try {
         const user = await authService.login(username, password)
-        const loginToken = authService.getLoginToken(user)
-        logger.info('User login: ', user)
-        res.cookie('loginToken', loginToken, {sameSite: 'None', secure: true})
+        // req.session.user = user
+        console.log(user)
         res.json(user)
     } catch (err) {
-        logger.error('Failed to Login ' + err)
+        logger.error('Failed to Login!!! ' + err)
         res.status(401).send({ err: 'Failed to Login' })
     }
 }
 
 async function signup(req, res) {
     try {
-        const credentials = req.body
+        const { username, password } = req.body
         // Never log passwords
-        // logger.debug(credentials)
-        const account = await authService.signup(credentials)
+        // logger.debug(fullname + ', ' + username + ', ' + password)
+        const account = await authService.signup(req.body)
         logger.debug(`auth.route - new account created: ` + JSON.stringify(account))
-        const user = await authService.login(credentials.username, credentials.password)
-        logger.info('User signup:', user)
-        const loginToken = authService.getLoginToken(user)
-        res.cookie('loginToken', loginToken, {sameSite: 'None', secure: true})
+        const user = await authService.login(username, password)
+        // req.session.user = user
         res.json(user)
     } catch (err) {
         logger.error('Failed to signup ' + err)
@@ -33,9 +31,9 @@ async function signup(req, res) {
     }
 }
 
-async function logout(req, res){
+async function logout(req, res) {
     try {
-        res.clearCookie('loginToken')
+        // req.session.destroy()
         res.send({ msg: 'Logged out successfully' })
     } catch (err) {
         res.status(500).send({ err: 'Failed to logout' })
@@ -45,5 +43,5 @@ async function logout(req, res){
 module.exports = {
     login,
     signup,
-    logout
+    logout,
 }

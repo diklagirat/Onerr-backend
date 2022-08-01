@@ -4,11 +4,9 @@ const ObjectId = require('mongodb').ObjectId
 const asyncLocalStorage = require('../../services/als.service')
 
 async function query() {
-    console.log('orders service')
     try {
         const collection = await dbService.getCollection('order')
         const orders = await collection.find({}).toArray()
-        console.log(orders)
         return orders
     } catch (err) {
         logger.error('cannot find orders', err)
@@ -16,7 +14,6 @@ async function query() {
     }
 }
 async function getById(orderId) {
-    console.log('order getById service')
 
     const collection = await dbService.getCollection('order')
     const order = collection.findOne({ _id: ObjectId(orderId) })
